@@ -149,17 +149,18 @@
   hyphens: auto;
 }
 
-.resume-content h1 {
-  font-size: 2.13em;
+.resume-content .resume-header {
+  text-align: center;
+  font-size: 1em;
+  margin-bottom: -1em;
+}
+
+.resume-header-name {
+  font-size: 2.13em !important;
   font-weight: 700;
   text-align: center;
   line-height: 1;
   margin-bottom: 10px;
-}
-
-.resume-content .resume-header {
-  text-align: center;
-  font-size: 1em;
 }
 
 .resume-content .resume-header-line {
@@ -204,24 +205,38 @@
   color: #000000;
 }
 
+.resume-content h1,
 .resume-content h2,
 .resume-content h3 {
   font-weight: bold;
   margin-bottom: 5px;
 }
 
-.resume-content h2 {
-  font-size: 1.3em;
+.resume-content h1 {
+  font-size: 1.8em;
+  margin: 1.2em 0 0.5em;
   border-bottom-style: solid;
   border-bottom-width: 1px;
   border-color: #000000;
-  margin: 1em 0 0.5em;
+  padding-bottom: 0.16em;
+}
+
+.resume-content h2 {
+  font-size: 1.4em;
+  margin: 0.8em 0 0.5em;
   padding-bottom: 0.15em;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-color: #000000;
 }
 
 .resume-content h3 {
-  font-size: 1.4em;
+  font-size: 1.2em;
   margin: 0.6em 0 0.2em;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-color: #000000;
+  padding-bottom: 0.16em;
 }
 
 .resume-content p,
@@ -257,6 +272,11 @@
 
 .resume-content strong {
   font-weight: 700;
+}
+
+.resume-content hr {
+  border-color: #000000;
+  margin: 0.5em 0 0.5em;
 }
 
 .dark .resume-paper {
