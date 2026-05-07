@@ -87,7 +87,7 @@ export default function Home() {
       minScale={0.1}
       maxScale={4}
       wheel={{ disabled: true }}
-      pinch={{ step: 0.05 }}
+      pinch={{ disabled: false, step: 0.05 }}
       limitToBounds={true}
       centerOnInit
       doubleClick={{ disabled: true }}
