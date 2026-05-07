@@ -59,7 +59,7 @@ export default function Home() {
   const [markdown, setMarkdown] = useState(DEFAULT_RESUME)
   const [fontFamily, setFontFamily] = useState(FONTS[0].value)
   const [fontSize, setFontSize] = useState(14)
-  const [lineHeight, setLineHeight] = useState(1.4)
+  const [lineHeight, setLineHeight] = useState(1.35)
   const [paperSize, setPaperSize] = useState<"A4" | "Letter">("A4")
   const [tab, setTab] = useState<"editor" | "preview">("editor")
   const [scaleDisplay, setScaleDisplay] = useState(1)
@@ -89,7 +89,6 @@ export default function Home() {
       wheel={{ disabled: true }}
       pinch={{ disabled: false, step: 0.05 }}
       limitToBounds={true}
-      centerOnInit
       doubleClick={{ disabled: true }}
       onZoomStop={(ref) => {
         setScaleDisplay(ref.state.scale)
@@ -235,7 +234,13 @@ export default function Home() {
             } md:flex`}
           >
             <TransformComponent
-              wrapperStyle={{ width: "100%", height: "100%" }}
+              wrapperStyle={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "flex-start",
+              }}
             >
               <ResumePreview
                 ref={resumeRef}
