@@ -26,7 +26,7 @@ export default function Home() {
   const [markdown, setMarkdown] = useState(DEFAULT_RESUME)
   const [fontFamily, setFontFamily] = useState(FONTS[0].value)
   const [fontSize, setFontSize] = useState(14)
-  const [lineHeight, setLineHeight] = useState(1.35)
+  const [lineHeight, setLineHeight] = useState(1.4)
   const [paperSize, setPaperSize] = useState<"A4" | "Letter">("A4")
   const [tab, setTab] = useState<"editor" | "preview">("editor")
   const resumeRef = useRef<HTMLDivElement>(null)
