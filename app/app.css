@@ -267,7 +267,7 @@
 @media print {
   @page {
     size: var(--print-paper-size, A4);
-    margin: var(0, 12mm);
+    margin: 0, 12mm;
   }
 
   html,
@@ -288,11 +288,20 @@
     padding: 0 !important;
   }
 
+  /* Revert react-zoom-pan-pinch */
+  .react-transform-wrapper,
+  .react-transform-component,
+  .react-transform-element {
+    transform: none !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
   .resume-paper {
     border: none !important;
     background: white !important;
     color: black !important;
-    padding: none !important;
   }
 
   .resume-content,
