@@ -102,7 +102,7 @@ export const ResumePreview = forwardRef<HTMLDivElement, Props>(
           className="resume-content"
           style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
         >
-          {name && <h1>{name}</h1>}
+          {name && <div className="resume-header-name">{name}</div>}
           {headerLines.length > 0 && (
             <div className="resume-header">
               {headerLines.map((line, i) => (
@@ -113,7 +113,9 @@ export const ResumePreview = forwardRef<HTMLDivElement, Props>(
                       className={`resume-header-item${j === line.length - 1 ? "no-separator" : ""}`}
                     >
                       {item.link ? (
-                        <a href={item.link}>{renderInline((item.text ?? "").trim())}</a>
+                        <a href={item.link}>
+                          {renderInline((item.text ?? "").trim())}
+                        </a>
                       ) : (
                         renderInline((item.text ?? "").trim())
                       )}
