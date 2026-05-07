@@ -63,6 +63,7 @@ export default function Home() {
   const [paperSize, setPaperSize] = useState<"A4" | "Letter">("A4")
   const [tab, setTab] = useState<"editor" | "preview">("editor")
   const [scaleDisplay, setScaleDisplay] = useState(1)
+  const [isCentered, setIsCentered] = useState(true)
   const resumeRef = useRef<HTMLDivElement>(null)
 
   const handleExportPDF = useCallback(() => {
@@ -92,6 +93,9 @@ export default function Home() {
       doubleClick={{ disabled: true }}
       onZoomStop={(ref) => {
         setScaleDisplay(ref.state.scale)
+      }}
+      onPanningStart={() => {
+        setIsCentered(false)
       }}
     >
       <div className="flex h-screen flex-col bg-background text-foreground">
@@ -238,7 +242,7 @@ export default function Home() {
                 width: "100%",
                 height: "100%",
                 display: "flex",
-                justifyContent: "center",
+                justifyContent: isCentered ? "center" : "flex-start",
                 alignItems: "flex-start",
               }}
             >
