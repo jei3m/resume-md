@@ -138,6 +138,37 @@
   background-color: #ffffff;
   padding: 14mm;
   color: #000000;
+  box-sizing: border-box;
+}
+
+.resume-section {
+  break-inside: avoid;
+}
+
+.resume-pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+.resume-content h1,
+.resume-content h2,
+.resume-content h3 {
+  break-after: avoid;
+}
+
+.resume-content p {
+  orphans: 3;
+  widows: 3;
+}
+
+.resume-content ul,
+.resume-content ol,
+.resume-content dl {
+  break-inside: avoid;
 }
 
 .resume-content {
@@ -149,17 +180,18 @@
   hyphens: auto;
 }
 
-.resume-content h1 {
-  font-size: 2.13em;
-  font-weight: 700;
-  text-align: center;
-  line-height: 1;
-  margin-bottom: 10px;
-}
-
 .resume-content .resume-header {
   text-align: center;
   font-size: 1em;
+  margin-bottom: -1em;
+}
+
+.resume-header-name {
+  font-size: 2.13em !important;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1;
+  margin: 10px 0px 10px 0;
 }
 
 .resume-content .resume-header-line {
@@ -204,24 +236,38 @@
   color: #000000;
 }
 
+.resume-content h1,
 .resume-content h2,
 .resume-content h3 {
   font-weight: bold;
   margin-bottom: 5px;
 }
 
-.resume-content h2 {
-  font-size: 1.3em;
+.resume-content h1 {
+  font-size: 1.8em;
+  margin: 1.2em 0 0.5em;
   border-bottom-style: solid;
   border-bottom-width: 1px;
   border-color: #000000;
-  margin: 1em 0 0.5em;
+  padding-bottom: 0.16em;
+}
+
+.resume-content h2 {
+  font-size: 1.4em;
+  margin: 0.8em 0 0.5em;
   padding-bottom: 0.15em;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-color: #000000;
 }
 
 .resume-content h3 {
-  font-size: 1.4em;
+  font-size: 1.2em;
   margin: 0.6em 0 0.2em;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-color: #000000;
+  padding-bottom: 0.16em;
 }
 
 .resume-content p,
@@ -259,6 +305,11 @@
   font-weight: 700;
 }
 
+.resume-content hr {
+  border-color: #000000;
+  margin: 0.5em 0 0.5em;
+}
+
 .dark .resume-paper {
   background-color: hsl(213, 12%, 15%);
   color: hsl(216, 12%, 84%);
@@ -267,7 +318,7 @@
 @media print {
   @page {
     size: var(--print-paper-size, A4);
-    margin: var(0, 12mm);
+    margin: 0, 12mm;
   }
 
   html,
@@ -288,11 +339,29 @@
     padding: 0 !important;
   }
 
+  .resume-zoom-wrapper {
+    transform: none !important;
+  }
+
   .resume-paper {
     border: none !important;
     background: white !important;
     color: black !important;
-    padding: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .resume-pages {
+    display: block !important;
+    gap: 0 !important;
+    padding: 0 !important;
+  }
+
+  .resume-measurer {
+    display: none !important;
   }
 
   .resume-content,

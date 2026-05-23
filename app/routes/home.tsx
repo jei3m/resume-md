@@ -22,13 +22,49 @@ const FONTS = [
 
 const STORAGE_KEY = "open-resume-md"
 
+function ZoomControls({
+  zoom,
+  onZoomIn,
+  onZoomOut,
+}: {
+  zoom: number
+  onZoomIn: () => void
+  onZoomOut: () => void
+}) {
+  const scale = Math.round(zoom * 100) || 100
+
+  return (
+    <div className="flex items-center gap-1">
+      <Label className="text-xs text-muted-foreground">Zoom</Label>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={onZoomOut}
+        className="h-7 w-7 p-0"
+      >
+        −
+      </Button>
+      <span className="w-10 text-center text-xs tabular-nums">{scale}%</span>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={onZoomIn}
+        className="h-7 w-7 p-0"
+      >
+        +
+      </Button>
+    </div>
+  )
+}
+
 export default function Home() {
   const [markdown, setMarkdown] = useState(DEFAULT_RESUME)
   const [fontFamily, setFontFamily] = useState(FONTS[0].value)
   const [fontSize, setFontSize] = useState(14)
-  const [lineHeight, setLineHeight] = useState(1.4)
+  const [lineHeight, setLineHeight] = useState(1.35)
   const [paperSize, setPaperSize] = useState<"A4" | "Letter">("A4")
   const [tab, setTab] = useState<"editor" | "preview">("editor")
+  const [zoom, setZoom] = useState(1)
   const resumeRef = useRef<HTMLDivElement>(null)
 
   const handleExportPDF = useCallback(() => {
@@ -101,6 +137,18 @@ export default function Home() {
             <span className="w-10 text-xs text-muted-foreground tabular-nums">
               {lineHeight.toFixed(2)}
             </span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <ZoomControls
+              zoom={zoom}
+              onZoomIn={() =>
+                setZoom((z) => Math.min(4, +(z + 0.1).toFixed(2)))
+              }
+              onZoomOut={() =>
+                setZoom((z) => Math.max(0.1, +(z - 0.1).toFixed(2)))
+              }
+            />
           </div>
 
           <Select
@@ -179,18 +227,27 @@ export default function Home() {
         </section>
 
         <section
-          className={`print-visible min-h-0 flex-1 overflow-auto bg-muted/40 p-6 ${
-            tab === "preview" ? "block" : "hidden"
-          } md:block`}
+          className={`print-visible min-h-0 flex-1 items-start justify-center overflow-auto bg-muted/40 ${
+            tab === "preview" ? "flex" : "hidden"
+          } md:flex`}
         >
-          <ResumePreview
-            ref={resumeRef}
-            markdown={markdown}
-            fontFamily={fontFamily}
-            fontSize={fontSize}
-            lineHeight={lineHeight}
-            paperSize={paperSize}
-          />
+            <div
+              className="resume-zoom-wrapper"
+              style={{
+                transform: `scale(${zoom})`,
+                transformOrigin: "top center",
+                transition: "transform 0.15s ease-out",
+              }}
+            >
+            <ResumePreview
+              ref={resumeRef}
+              markdown={markdown}
+              fontFamily={fontFamily}
+              fontSize={fontSize}
+              lineHeight={lineHeight}
+              paperSize={paperSize}
+            />
+          </div>
         </section>
       </main>
     </div>
