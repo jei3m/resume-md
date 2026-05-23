@@ -141,10 +141,6 @@
   box-sizing: border-box;
 }
 
-.resume-section {
-  break-inside: avoid;
-}
-
 .resume-pages {
   display: flex;
   flex-direction: column;

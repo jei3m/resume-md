@@ -25,6 +25,10 @@ interface Section {
   content: string
 }
 
+interface ContentBlock {
+  markdown: string
+}
+
 function splitBodyIntoSections(body: string): Section[] {
   const sections: Section[] = []
   const lines = body.split("\n")
@@ -51,6 +55,24 @@ function splitBodyIntoSections(body: string): Section[] {
   flush()
 
   return sections
+}
+
+function splitSectionsIntoBlocks(sections: Section[]): ContentBlock[] {
+  const blocks: ContentBlock[] = []
+  for (const section of sections) {
+    const contentBlocks = section.content
+      .split(/\n\n+/)
+      .map((b) => b.trim())
+      .filter((b) => b)
+    for (let i = 0; i < contentBlocks.length; i++) {
+      const markdown =
+        i === 0 && section.heading
+          ? `## ${section.heading}\n\n${contentBlocks[i]}`
+          : contentBlocks[i]
+      blocks.push({ markdown })
+    }
+  }
+  return blocks
 }
 
 function renderInline(text: string) {
@@ -154,17 +176,17 @@ export const ResumePreview = forwardRef<HTMLDivElement, Props>(
         )
       }
 
-      for (const section of sections) {
+      const flatBlocks = splitSectionsIntoBlocks(sections)
+
+      for (const block of flatBlocks) {
         blocks.push(
-          <div key={key++} className="resume-section">
+          <div key={key++} className="resume-block">
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkDeflist]}
               rehypePlugins={[rehypeRaw]}
               components={markdownComponents}
             >
-              {section.heading
-                ? `## ${section.heading}\n\n${section.content}`
-                : section.content}
+              {block.markdown}
             </ReactMarkdown>
           </div>
         )
