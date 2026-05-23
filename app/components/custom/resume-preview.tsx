@@ -3,7 +3,7 @@ import remarkGfm from "remark-gfm"
 import remarkDeflist from "remark-deflist"
 import rehypeRaw from "rehype-raw"
 import yaml from "js-yaml"
-import { forwardRef, useMemo } from "react"
+import { forwardRef, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { Icon } from "@iconify/react"
 
 interface HeaderItem {
@@ -20,15 +20,40 @@ interface Props {
   paperSize: "A4" | "Letter"
 }
 
-// Replace <span class="iconify" data-icon="..."></span> with <Icon /> components.
-// We render the body via react-markdown's rehype-raw, but iconify spans render
-// as empty spans by default. We post-process the resulting markdown body by
-// converting iconify spans to inline SVG markup using @iconify/react isn't
-// trivial in the markdown pipeline, so we render header items separately and
-// strip iconify spans inside body markdown into plain text-friendly icons via
-// a custom span renderer.
+interface Section {
+  heading: string
+  content: string
+}
+
+function splitBodyIntoSections(body: string): Section[] {
+  const sections: Section[] = []
+  const lines = body.split("\n")
+  let currentSection: string[] = []
+  let currentHeading = ""
+
+  const flush = () => {
+    const trimmed = currentSection.join("\n").trim()
+    if (currentHeading || trimmed) {
+      sections.push({ heading: currentHeading, content: trimmed })
+    }
+    currentSection = []
+  }
+
+  for (const line of lines) {
+    const m = line.match(/^## (.+)$/)
+    if (m) {
+      flush()
+      currentHeading = m[1]
+    } else {
+      currentSection.push(line)
+    }
+  }
+  flush()
+
+  return sections
+}
+
 function renderInline(text: string) {
-  // Split into pieces, replacing iconify spans with <Icon/>
   const parts: (string | { icon: string })[] = []
   const re = /<span\s+class="iconify"\s+data-icon="([^"]+)"\s*><\/span>/g
   let last = 0
@@ -48,6 +73,17 @@ function renderInline(text: string) {
   )
 }
 
+const markdownComponents = {
+  span: ({ node, ...props }: any) => {
+    if (props.className === "iconify" && props["data-icon"]) {
+      return (
+        <Icon icon={props["data-icon"]} className="resume-icon" inline />
+      )
+    }
+    return <span {...props} />
+  },
+}
+
 export const ResumePreview = forwardRef<HTMLDivElement, Props>(
   function ResumePreview(
     { markdown, fontFamily, fontSize, lineHeight, paperSize }: Props,
@@ -55,8 +91,8 @@ export const ResumePreview = forwardRef<HTMLDivElement, Props>(
   ) {
     const dims =
       paperSize === "A4"
-        ? { w: "210mm", minH: "297mm" }
-        : { w: "8.5in", minH: "11in" }
+        ? { w: "210mm", h: "297mm" }
+        : { w: "8.5in", h: "11in" }
 
     const { name, header, body } = useMemo(() => {
       const m = markdown.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/)
@@ -73,65 +109,183 @@ export const ResumePreview = forwardRef<HTMLDivElement, Props>(
       }
     }, [markdown])
 
-    // Group header items into lines using `newLine: true` as a line break marker.
     const headerLines: HeaderItem[][] = []
     header.forEach((item) => {
       if (item.newLine || headerLines.length === 0) headerLines.push([item])
       else headerLines[headerLines.length - 1].push(item)
     })
 
-    // Custom renderer that converts inline iconify spans inside markdown body
-    const components = {
-      span: ({ node, ...props }: any) => {
-        if (props.className === "iconify" && props["data-icon"]) {
-          return (
-            <Icon icon={props["data-icon"]} className="resume-icon" inline />
-          )
+    const sections = useMemo(() => splitBodyIntoSections(body), [body])
+
+    const contentBlocks = useMemo(() => {
+      const blocks: React.ReactNode[] = []
+      let key = 0
+
+      if (name) {
+        blocks.push(
+          <div key={key++} className="resume-header-name">
+            {name}
+          </div>
+        )
+      }
+
+      if (headerLines.length > 0) {
+        blocks.push(
+          <div key={key++} className="resume-header">
+            {headerLines.map((line, i) => (
+              <div key={i} className="resume-header-line">
+                {line.map((item, j) => (
+                  <span
+                    key={j}
+                    className={`resume-header-item${j === line.length - 1 ? "no-separator" : ""}`}
+                  >
+                    {item.link ? (
+                      <a href={item.link}>
+                        {renderInline((item.text ?? "").trim())}
+                      </a>
+                    ) : (
+                      renderInline((item.text ?? "").trim())
+                    )}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        )
+      }
+
+      for (const section of sections) {
+        blocks.push(
+          <div key={key++} className="resume-section">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm, remarkDeflist]}
+              rehypePlugins={[rehypeRaw]}
+              components={markdownComponents}
+            >
+              {section.heading
+                ? `## ${section.heading}\n\n${section.content}`
+                : section.content}
+            </ReactMarkdown>
+          </div>
+        )
+      }
+
+      return blocks
+    }, [name, headerLines, sections])
+
+    const [pageBlockIndices, setPageBlockIndices] = useState<number[][] | null>(
+      null
+    )
+    const measuringRef = useRef<HTMLDivElement>(null)
+    const prevSplitKey = useRef("")
+
+    useLayoutEffect(() => {
+      const container = measuringRef.current
+      if (!container) return
+
+      const contentEl = container.querySelector(".resume-content")
+      if (!contentEl) return
+
+      const children = Array.from(contentEl.children)
+      if (children.length === 0) {
+        setPageBlockIndices([])
+        return
+      }
+
+      const style = getComputedStyle(container)
+      const padTop = parseFloat(style.paddingTop) || 0
+      const padBottom = parseFloat(style.paddingBottom) || 0
+      // The -10px margin-top on .resume-content gives 10px extra effective space
+      const contentAreaHeight = container.clientHeight - padTop - padBottom + 10
+
+      if (contentAreaHeight <= 0) return
+
+      const breaks: number[] = []
+      let acc = 0
+
+      for (let i = 0; i < children.length; i++) {
+        const h = children[i].getBoundingClientRect().height
+        if (acc + h > contentAreaHeight + 0.5 && acc > 0) {
+          breaks.push(i)
+          acc = h
+        } else {
+          acc += h
         }
-        return <span {...props} />
-      },
-    }
+      }
+
+      const groups: number[][] = []
+      let start = 0
+      for (const b of breaks) {
+        groups.push(
+          Array.from({ length: b - start }, (_, i) => start + i)
+        )
+        start = b
+      }
+      if (start < children.length) {
+        groups.push(
+          Array.from({ length: children.length - start }, (_, i) => start + i)
+        )
+      }
+
+      const key = groups.map((g) => g.join(",")).join("|")
+      if (key !== prevSplitKey.current) {
+        prevSplitKey.current = key
+        setPageBlockIndices(groups)
+      }
+    }, [markdown, fontFamily, fontSize, lineHeight, paperSize])
 
     return (
-      <div
-        ref={ref}
-        className="resume-paper"
-        style={{ width: dims.w, minHeight: dims.minH }}
-      >
+      <div ref={ref} style={{ position: "relative" }}>
         <div
-          className="resume-content"
-          style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
+          ref={measuringRef}
+          className="resume-paper resume-measurer"
+          style={{
+            width: dims.w,
+            height: dims.h,
+            overflow: "hidden",
+            visibility: "hidden",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            pointerEvents: "none",
+            zIndex: -1,
+            border: 0,
+          }}
         >
-          {name && <div className="resume-header-name">{name}</div>}
-          {headerLines.length > 0 && (
-            <div className="resume-header">
-              {headerLines.map((line, i) => (
-                <div key={i} className="resume-header-line">
-                  {line.map((item, j) => (
-                    <span
-                      key={j}
-                      className={`resume-header-item${j === line.length - 1 ? "no-separator" : ""}`}
-                    >
-                      {item.link ? (
-                        <a href={item.link}>
-                          {renderInline((item.text ?? "").trim())}
-                        </a>
-                      ) : (
-                        renderInline((item.text ?? "").trim())
-                      )}
-                    </span>
-                  ))}
-                </div>
-              ))}
-            </div>
-          )}
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkDeflist]}
-            rehypePlugins={[rehypeRaw]}
-            components={components}
+          <div
+            className="resume-content"
+            style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
           >
-            {body}
-          </ReactMarkdown>
+            {contentBlocks}
+          </div>
+        </div>
+
+        <div className="resume-pages">
+          {pageBlockIndices
+            ? pageBlockIndices.map((indices, pageIdx) => (
+                <div
+                  key={pageIdx}
+                  className="resume-paper"
+                  style={{
+                    width: dims.w,
+                    height: dims.h,
+                    overflow: "hidden",
+                    boxShadow: "0 2px 12px rgba(0,0,0,0.12)",
+                  }}
+                >
+                  <div
+                    className="resume-content"
+                    style={{
+                      fontFamily,
+                      fontSize: `${fontSize}px`,
+                      lineHeight,
+                    }}
+                  >
+                    {indices.map((idx) => contentBlocks[idx])}
+                  </div>
+                </div>
+              ))
+            : null}
         </div>
       </div>
     )
