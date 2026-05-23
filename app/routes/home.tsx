@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
 import { MarkdownEditor } from "~/components/custom/markdown-editor"
 import { ResumePreview } from "~/components/custom/resume-preview"
 import { Button } from "~/components/ui/button"
@@ -73,15 +74,31 @@ export default function Home() {
     window.print()
   }, [paperSize])
 
+  const saveToStorage = useCallback(() => {
+    localStorage.setItem(STORAGE_KEY, markdown)
+    toast.success("Changes saved")
+  }, [markdown])
+
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) setMarkdown(saved)
   }, [])
 
   useEffect(() => {
-    const t = setTimeout(() => localStorage.setItem(STORAGE_KEY, markdown), 300)
+    const t = setTimeout(saveToStorage, 300)
     return () => clearTimeout(t)
-  }, [markdown])
+  }, [saveToStorage])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault()
+        saveToStorage()
+      }
+    }
+    addEventListener("keydown", onKey)
+    return () => removeEventListener("keydown", onKey)
+  }, [saveToStorage])
 
   return (
     <div className="flex h-screen flex-col bg-background text-foreground">
@@ -178,9 +195,7 @@ export default function Home() {
 
           <Button
             size="sm"
-            onClick={() => {
-              localStorage.setItem(STORAGE_KEY, markdown)
-            }}
+            onClick={saveToStorage}
             className="h-8"
           >
             Save
