@@ -12,11 +12,6 @@ import {
 } from "~/components/ui/select"
 import { Slider } from "~/components/ui/slider"
 import { DEFAULT_RESUME } from "~/lib/default-resume"
-import {
-  TransformWrapper,
-  TransformComponent,
-  useControls,
-} from "react-zoom-pan-pinch"
 
 const FONTS = [
   { label: "Inter", value: "Inter, system-ui, sans-serif" },
@@ -27,9 +22,16 @@ const FONTS = [
 
 const STORAGE_KEY = "open-resume-md"
 
-function ZoomControls({ scaleDisplay }: { scaleDisplay: number }) {
-  const { zoomIn, zoomOut } = useControls()
-  const scale = Math.round(scaleDisplay * 100) || 100
+function ZoomControls({
+  zoom,
+  onZoomIn,
+  onZoomOut,
+}: {
+  zoom: number
+  onZoomIn: () => void
+  onZoomOut: () => void
+}) {
+  const scale = Math.round(zoom * 100) || 100
 
   return (
     <div className="flex items-center gap-1">
@@ -37,7 +39,7 @@ function ZoomControls({ scaleDisplay }: { scaleDisplay: number }) {
       <Button
         size="sm"
         variant="outline"
-        onClick={() => zoomOut(0.3)}
+        onClick={onZoomOut}
         className="h-7 w-7 p-0"
       >
         −
@@ -46,7 +48,7 @@ function ZoomControls({ scaleDisplay }: { scaleDisplay: number }) {
       <Button
         size="sm"
         variant="outline"
-        onClick={() => zoomIn(0.3)}
+        onClick={onZoomIn}
         className="h-7 w-7 p-0"
       >
         +
@@ -62,8 +64,7 @@ export default function Home() {
   const [lineHeight, setLineHeight] = useState(1.35)
   const [paperSize, setPaperSize] = useState<"A4" | "Letter">("A4")
   const [tab, setTab] = useState<"editor" | "preview">("editor")
-  const [scaleDisplay, setScaleDisplay] = useState(1)
-  const [isCentered, setIsCentered] = useState(true)
+  const [zoom, setZoom] = useState(1)
   const resumeRef = useRef<HTMLDivElement>(null)
 
   const handleExportPDF = useCallback(() => {
@@ -83,181 +84,172 @@ export default function Home() {
   }, [markdown])
 
   return (
-    <TransformWrapper
-      initialScale={1}
-      minScale={0.1}
-      maxScale={4}
-      wheel={{ disabled: true }}
-      pinch={{ disabled: false, step: 0.05 }}
-      limitToBounds={true}
-      doubleClick={{ disabled: true }}
-      onZoomStop={(ref) => {
-        setScaleDisplay(ref.state.scale)
-      }}
-      onPanningStart={() => {
-        setIsCentered(false)
-      }}
-    >
-      <div className="flex h-screen flex-col bg-background text-foreground">
-        {/* Top bar */}
-        <header className="print-hidden flex flex-wrap items-center gap-3 border-b border-border bg-card px-4 py-3">
-          <h1 className="mr-2 text-base font-semibold tracking-tight">
-            RESUME.md
-          </h1>
-          <div className="ml-auto flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Label className="text-xs text-muted-foreground">Font</Label>
-              <Select value={fontFamily} onValueChange={setFontFamily}>
-                <SelectTrigger className="h-8 w-[140px] text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {FONTS.map((f) => (
-                    <SelectItem key={f.value} value={f.value}>
-                      {f.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="hidden items-center gap-2 md:flex">
-              <Label className="text-xs text-muted-foreground">Size</Label>
-              <div className="w-24">
-                <Slider
-                  value={[fontSize]}
-                  min={10}
-                  max={18}
-                  step={0.5}
-                  onValueChange={(v) => setFontSize(v[0])}
-                />
-              </div>
-              <span className="w-8 text-xs text-muted-foreground tabular-nums">
-                {fontSize}
-              </span>
-            </div>
-
-            <div className="hidden items-center gap-2 lg:flex">
-              <Label className="text-xs text-muted-foreground">Line</Label>
-              <div className="w-24">
-                <Slider
-                  value={[lineHeight]}
-                  min={1.1}
-                  max={1.8}
-                  step={0.05}
-                  onValueChange={(v) => setLineHeight(v[0])}
-                />
-              </div>
-              <span className="w-10 text-xs text-muted-foreground tabular-nums">
-                {lineHeight.toFixed(2)}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <ZoomControls scaleDisplay={scaleDisplay} />
-            </div>
-
-            <Select
-              value={paperSize}
-              onValueChange={(v) => setPaperSize(v as "A4" | "Letter")}
-            >
-              <SelectTrigger className="h-8 w-[90px] text-xs">
+    <div className="flex h-screen flex-col bg-background text-foreground">
+      {/* Top bar */}
+      <header className="print-hidden flex flex-wrap items-center gap-3 border-b border-border bg-card px-4 py-3">
+        <h1 className="mr-2 text-base font-semibold tracking-tight">
+          RESUME.md
+        </h1>
+        <div className="ml-auto flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Label className="text-xs text-muted-foreground">Font</Label>
+            <Select value={fontFamily} onValueChange={setFontFamily}>
+              <SelectTrigger className="h-8 w-[140px] text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="A4">A4</SelectItem>
-                <SelectItem value="Letter">Letter</SelectItem>
+                {FONTS.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>
+                    {f.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => {
-                localStorage.removeItem(STORAGE_KEY)
-                window.location.reload()
-              }}
-              className="h-8"
-            >
-              Delete
-            </Button>
-
-            <Button
-              size="sm"
-              onClick={() => {
-                localStorage.setItem(STORAGE_KEY, markdown)
-              }}
-              className="h-8"
-            >
-              Save
-            </Button>
-
-            <Button size="sm" onClick={handleExportPDF} className="h-8">
-              Export PDF
-            </Button>
           </div>
-        </header>
 
-        {/* Mobile tabs */}
-        <div className="print-hidden flex border-b border-border bg-card md:hidden">
-          <button
-            onClick={() => setTab("editor")}
-            className={`flex-1 py-2 text-sm font-medium ${
-              tab === "editor"
-                ? "border-b-2 border-primary text-foreground"
-                : "text-muted-foreground"
-            }`}
+          <div className="hidden items-center gap-2 md:flex">
+            <Label className="text-xs text-muted-foreground">Size</Label>
+            <div className="w-24">
+              <Slider
+                value={[fontSize]}
+                min={10}
+                max={18}
+                step={0.5}
+                onValueChange={(v) => setFontSize(v[0])}
+              />
+            </div>
+            <span className="w-8 text-xs text-muted-foreground tabular-nums">
+              {fontSize}
+            </span>
+          </div>
+
+          <div className="hidden items-center gap-2 lg:flex">
+            <Label className="text-xs text-muted-foreground">Line</Label>
+            <div className="w-24">
+              <Slider
+                value={[lineHeight]}
+                min={1.1}
+                max={1.8}
+                step={0.05}
+                onValueChange={(v) => setLineHeight(v[0])}
+              />
+            </div>
+            <span className="w-10 text-xs text-muted-foreground tabular-nums">
+              {lineHeight.toFixed(2)}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <ZoomControls
+              zoom={zoom}
+              onZoomIn={() =>
+                setZoom((z) => Math.min(4, +(z + 0.1).toFixed(2)))
+              }
+              onZoomOut={() =>
+                setZoom((z) => Math.max(0.1, +(z - 0.1).toFixed(2)))
+              }
+            />
+          </div>
+
+          <Select
+            value={paperSize}
+            onValueChange={(v) => setPaperSize(v as "A4" | "Letter")}
           >
-            Editor
-          </button>
-          <button
-            onClick={() => setTab("preview")}
-            className={`flex-1 py-2 text-sm font-medium ${
-              tab === "preview"
-                ? "border-b-2 border-primary text-foreground"
-                : "text-muted-foreground"
-            }`}
+            <SelectTrigger className="h-8 w-[90px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="A4">A4</SelectItem>
+              <SelectItem value="Letter">Letter</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => {
+              localStorage.removeItem(STORAGE_KEY)
+              window.location.reload()
+            }}
+            className="h-8"
           >
-            Preview
-          </button>
+            Delete
+          </Button>
+
+          <Button
+            size="sm"
+            onClick={() => {
+              localStorage.setItem(STORAGE_KEY, markdown)
+            }}
+            className="h-8"
+          >
+            Save
+          </Button>
+
+          <Button size="sm" onClick={handleExportPDF} className="h-8">
+            Export PDF
+          </Button>
         </div>
+      </header>
 
-        {/* Split */}
-        <main className="flex min-h-0 flex-1 flex-col md:flex-row">
-          <section
-            className={`print-hidden min-h-0 flex-1 border-r border-border bg-card ${
-              tab === "editor" ? "flex" : "hidden"
-            } md:flex`}
-          >
-            <MarkdownEditor value={markdown} onChange={setMarkdown} />
-          </section>
+      {/* Mobile tabs */}
+      <div className="print-hidden flex border-b border-border bg-card md:hidden">
+        <button
+          onClick={() => setTab("editor")}
+          className={`flex-1 py-2 text-sm font-medium ${
+            tab === "editor"
+              ? "border-b-2 border-primary text-foreground"
+              : "text-muted-foreground"
+          }`}
+        >
+          Editor
+        </button>
+        <button
+          onClick={() => setTab("preview")}
+          className={`flex-1 py-2 text-sm font-medium ${
+            tab === "preview"
+              ? "border-b-2 border-primary text-foreground"
+              : "text-muted-foreground"
+          }`}
+        >
+          Preview
+        </button>
+      </div>
 
-          <section
-            className={`print-visible min-h-0 flex-1 items-center justify-center overflow-auto bg-muted/40 ${
-              tab === "preview" ? "flex" : "hidden"
-            } md:flex`}
-          >
-            <TransformComponent
-              wrapperStyle={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                justifyContent: isCentered ? "center" : "flex-start",
-                alignItems: "flex-start",
+      {/* Split */}
+      <main className="flex min-h-0 flex-1 flex-col md:flex-row">
+        <section
+          className={`print-hidden min-h-0 flex-1 border-r border-border bg-card ${
+            tab === "editor" ? "flex" : "hidden"
+          } md:flex`}
+        >
+          <MarkdownEditor value={markdown} onChange={setMarkdown} />
+        </section>
+
+        <section
+          className={`print-visible min-h-0 flex-1 items-start justify-center overflow-auto bg-muted/40 ${
+            tab === "preview" ? "flex" : "hidden"
+          } md:flex`}
+        >
+            <div
+              className="resume-zoom-wrapper"
+              style={{
+                transform: `scale(${zoom})`,
+                transformOrigin: "top center",
+                transition: "transform 0.15s ease-out",
               }}
             >
-              <ResumePreview
-                ref={resumeRef}
-                markdown={markdown}
-                fontFamily={fontFamily}
-                fontSize={fontSize}
-                lineHeight={lineHeight}
-                paperSize={paperSize}
-              />
-            </TransformComponent>
-          </section>
-        </main>
-      </div>
-    </TransformWrapper>
+            <ResumePreview
+              ref={resumeRef}
+              markdown={markdown}
+              fontFamily={fontFamily}
+              fontSize={fontSize}
+              lineHeight={lineHeight}
+              paperSize={paperSize}
+            />
+          </div>
+        </section>
+      </main>
+    </div>
   )
 }
