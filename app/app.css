@@ -141,6 +141,16 @@
   box-sizing: border-box;
 }
 
+.resume-zoom-wrapper {
+  margin-inline: auto;
+}
+
+.resume-zoom-scaler {
+  width: fit-content;
+  margin-inline: auto;
+  transform-origin: top center;
+}
+
 .resume-pages {
   display: flex;
   flex-direction: column;
@@ -186,6 +196,7 @@
   font-weight: 700;
   text-align: center;
   line-height: 1;
+  margin-top: -20px;
 }
 
 .resume-content .resume-header-line {
@@ -312,7 +323,7 @@
 @media print {
   @page {
     size: var(--print-paper-size, A4);
-    margin: 0, 12mm;
+    margin: 0;
   }
 
   html,
@@ -334,15 +345,19 @@
   }
 
   .resume-zoom-wrapper {
+    width: auto !important;
     transform: none !important;
   }
 
+  .resume-zoom-scaler {
+    transform: none !important;
+    scale: none !important;
+  }
+
   .resume-paper {
-    border: none !important;
+    border-color: transparent !important;
     background: white !important;
     color: black !important;
-    height: auto !important;
-    overflow: visible !important;
     box-shadow: none !important;
     margin: 0 !important;
     border-radius: 0 !important;

@@ -98,9 +98,7 @@ function renderInline(text: string) {
 const markdownComponents = {
   span: ({ node, ...props }: any) => {
     if (props.className === "iconify" && props["data-icon"]) {
-      return (
-        <Icon icon={props["data-icon"]} className="resume-icon" inline />
-      )
+      return <Icon icon={props["data-icon"]} className="resume-icon" inline />
     }
     return <span {...props} />
   },
@@ -208,7 +206,7 @@ export const ResumePreview = forwardRef<HTMLDivElement, Props>(
       const contentEl = container.querySelector(".resume-content")
       if (!contentEl) return
 
-      const children = Array.from(contentEl.children)
+      const children = Array.from(contentEl.children) as HTMLElement[]
       if (children.length === 0) {
         setPageBlockIndices([])
         return
@@ -222,25 +220,20 @@ export const ResumePreview = forwardRef<HTMLDivElement, Props>(
 
       if (contentAreaHeight <= 0) return
 
+      const baseTop = children[0].offsetTop
       const breaks: number[] = []
-      let acc = 0
-
-      for (let i = 0; i < children.length; i++) {
-        const h = children[i].getBoundingClientRect().height
-        if (acc + h > contentAreaHeight + 0.5 && acc > 0) {
+      let pageTop = baseTop
+      for (let i = 1; i < children.length; i++) {
+        if (children[i].offsetTop - pageTop > contentAreaHeight + 0.5) {
           breaks.push(i)
-          acc = h
-        } else {
-          acc += h
+          pageTop = children[i].offsetTop
         }
       }
 
       const groups: number[][] = []
       let start = 0
       for (const b of breaks) {
-        groups.push(
-          Array.from({ length: b - start }, (_, i) => start + i)
-        )
+        groups.push(Array.from({ length: b - start }, (_, i) => start + i))
         start = b
       }
       if (start < children.length) {
@@ -257,7 +250,7 @@ export const ResumePreview = forwardRef<HTMLDivElement, Props>(
     }, [markdown, fontFamily, fontSize, lineHeight, paperSize])
 
     return (
-      <div ref={ref} style={{ position: "relative" }}>
+      <div ref={ref}>
         <div
           ref={measuringRef}
           className="resume-paper resume-measurer"
