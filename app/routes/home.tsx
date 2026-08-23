@@ -193,11 +193,7 @@ export default function Home() {
             Delete
           </Button>
 
-          <Button
-            size="sm"
-            onClick={saveToStorage}
-            className="h-8"
-          >
+          <Button size="sm" onClick={saveToStorage} className="h-8">
             Save
           </Button>
 
@@ -242,26 +238,32 @@ export default function Home() {
         </section>
 
         <section
-          className={`print-visible min-h-0 flex-1 items-start justify-center overflow-auto bg-muted/40 ${
-            tab === "preview" ? "flex" : "hidden"
-          } md:flex`}
+          className={`print-visible min-h-0 flex-1 overflow-auto bg-muted/40 ${
+            tab === "preview" ? "block" : "hidden"
+          } md:block`}
         >
+          <div
+            className="resume-zoom-wrapper"
+            style={{
+              width: `calc(max(${paperSize === "A4" ? "210mm" : "8.5in"}, ${paperSize === "A4" ? "210mm" : "8.5in"} * ${zoom}))`,
+            }}
+          >
             <div
-              className="resume-zoom-wrapper"
+              className="resume-zoom-scaler"
               style={{
                 transform: `scale(${zoom})`,
                 transformOrigin: "top center",
-                transition: "transform 0.15s ease-out",
               }}
             >
-            <ResumePreview
-              ref={resumeRef}
-              markdown={markdown}
-              fontFamily={fontFamily}
-              fontSize={fontSize}
-              lineHeight={lineHeight}
-              paperSize={paperSize}
-            />
+              <ResumePreview
+                ref={resumeRef}
+                markdown={markdown}
+                fontFamily={fontFamily}
+                fontSize={fontSize}
+                lineHeight={lineHeight}
+                paperSize={paperSize}
+              />
+            </div>
           </div>
         </section>
       </main>
