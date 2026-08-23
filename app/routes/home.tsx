@@ -15,10 +15,19 @@ import { Slider } from "~/components/ui/slider"
 import { DEFAULT_RESUME } from "~/lib/default-resume"
 
 const FONTS = [
+  { label: "Arial", value: "Arial, Helvetica, sans-serif" },
+  { label: "Calibri", value: "Calibri, 'Segoe UI', Arial, sans-serif" },
+  { label: "Cambria", value: "Cambria, Georgia, serif" },
+  { label: "Garamond", value: "Garamond, 'Times New Roman', serif" },
+  { label: "Georgia", value: "Georgia, 'Times New Roman', serif" },
+  { label: "Helvetica", value: "Helvetica, Arial, sans-serif" },
   { label: "Inter", value: "Inter, system-ui, sans-serif" },
-  { label: "Source Sans", value: "'Source Sans 3', sans-serif" },
-  { label: "Merriweather", value: "Merriweather, Georgia, serif" },
   { label: "JetBrains Mono", value: "'JetBrains Mono', monospace" },
+  { label: "Source Sans", value: "'Source Sans 3', sans-serif" },
+  { label: "Tahoma", value: "Tahoma, Verdana, sans-serif" },
+  { label: "Times New Roman", value: "'Times New Roman', Times, serif" },
+  { label: "Trebuchet MS", value: "'Trebuchet MS', 'Segoe UI', sans-serif" },
+  { label: "Verdana", value: "Verdana, Geneva, sans-serif" },
 ]
 
 const STORAGE_KEY = "open-resume-md"
@@ -114,7 +123,7 @@ export default function Home() {
               <SelectTrigger className="h-8 w-[140px] text-xs">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="h-[200px]">
                 {FONTS.map((f) => (
                   <SelectItem key={f.value} value={f.value}>
                     {f.label}
